@@ -1,5 +1,5 @@
-import React from 'react';
-import { assets } from '../assets/assets';
+import React from "react";
+import { assets } from "../assets/assets";
 
 const Footer = () => {
   return (
@@ -7,9 +7,12 @@ const Footer = () => {
       <div className="flex flex-col md:flex-row justify-between gap-12 pb-10 border-b border-gray-300">
         {/* Logo and Description */}
         <div className="max-w-md">
-          <img src={assets.logo} alt="QuickAi Logo" className="h-10" />
+          <img src={assets.logo} alt="Promptly Logo" className="h-10" />
           <p className="mt-6 text-sm leading-relaxed">
-            Experience the power of AI with <strong>QuickAi</strong>. Transform your content creation with our suite of premium AI tools. Write articles, generate images, and enhance your productivity like never before.
+            Experience the power of AI with <strong>Promptly</strong>. Transform
+            your content creation with our suite of premium AI tools. Write
+            articles, generate images, and enhance your productivity like never
+            before.
           </p>
         </div>
 
@@ -19,19 +22,42 @@ const Footer = () => {
           <div>
             <h2 className="text-gray-900 font-semibold mb-4">Company</h2>
             <ul className="space-y-2 text-sm">
-              <li><a href="#" className="hover:text-primary transition">Home</a></li>
-              <li><a href="#" className="hover:text-primary transition">About Us</a></li>
-              <li><a href="#" className="hover:text-primary transition">Contact Us</a></li>
-              <li><a href="#" className="hover:text-primary transition">Privacy Policy</a></li>
+              <li>
+                <a href="#" className="hover:text-primary transition">
+                  Home
+                </a>
+              </li>
+              <li>
+                <a href="#" className="hover:text-primary transition">
+                  About Us
+                </a>
+              </li>
+              <li>
+                <a href="#" className="hover:text-primary transition">
+                  Contact Us
+                </a>
+              </li>
+              <li>
+                <a href="#" className="hover:text-primary transition">
+                  Privacy Policy
+                </a>
+              </li>
             </ul>
           </div>
 
           {/* Newsletter */}
           <div>
-            <h2 className="text-gray-900 font-semibold mb-4">Subscribe to our newsletter</h2>
-            <p className="text-sm mb-4">Stay updated with the latest news, insights, and AI trends—delivered weekly.</p>
+            <h2 className="text-gray-900 font-semibold mb-4">
+              Subscribe to our newsletter
+            </h2>
+            <p className="text-sm mb-4">
+              Stay updated with the latest news, insights, and AI
+              trends—delivered weekly.
+            </p>
             <form className="flex items-center gap-2">
-              <label htmlFor="email" className="sr-only">Email address</label>
+              <label htmlFor="email" className="sr-only">
+                Email address
+              </label>
               <input
                 id="email"
                 type="email"
@@ -53,10 +79,23 @@ const Footer = () => {
       {/* Footer Bottom */}
       <div className="text-center text-xs md:text-sm mt-6 pb-6 text-gray-500">
         <p>
-          &copy; 2025 <a href="https://www.linkedin.com/in/md-sumon9897/" className="hover:text-primary">Mohammad Sumon</a>. All rights reserved.
+          &copy; 2025{" "}
+          <a
+            href="https://www.linkedin.com/in/haidersince2002/"
+            className="hover:text-primary"
+          >
+            Haider Ali
+          </a>
+          . All rights reserved.
         </p>
         <p className="mt-1">
-          GitHub: <a href="https://github.com/sumu9897" className="hover:text-primary">sumu9897</a>
+          GitHub:{" "}
+          <a
+            href="https://github.com/haidersince2002"
+            className="hover:text-primary"
+          >
+            haidersince2002
+          </a>
         </p>
       </div>
     </footer>
