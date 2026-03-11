@@ -1,0 +1,67 @@
+@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap");
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+* {
+  font-family: "Outfit", sans-serif;
+}
+
+@theme {
+  --color-primary: #5044e5;
+}
+
+/* Dark mode base styles */
+.dark body {
+  background-color: #0f172a;
+  color: #e2e8f0;
+}
+
+.reset-tw,
+.reset-tw * {
+  all: revert !important;
+}
+
+.dark .reset-tw,
+.dark .reset-tw * {
+  all: revert !important;
+  color: #cbd5e1 !important;
+  background-color: transparent !important;
+}
+
+.cl-drawerRoot {
+  z-index: 10;
+}
+
+/* Dark mode for Clerk components — force all sections dark */
+.dark .cl-card,
+.dark .cl-card>*,
+.dark .cl-card div,
+.dark .cl-card footer,
+.dark .cl-card section,
+.dark .cl-card nav {
+  background-color: #1e293b !important;
+  color: #e2e8f0 !important;
+}
+
+.dark .cl-card a {
+  color: #818cf8 !important;
+}
+
+.dark .cl-card input {
+  background-color: #0f172a !important;
+  border-color: #334155 !important;
+  color: #e2e8f0 !important;
+}
+
+.dark .cl-card button {
+  border-color: #334155 !important;
+}
+
+.dark .cl-card hr {
+  border-color: #334155 !important;
+}
+
+.dark .cl-modalBackdrop {
+  background-color: rgba(0, 0, 0, 0.7) !important;
+}
