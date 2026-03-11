@@ -17,7 +17,7 @@ const GEMINI_MODEL = "gemini-2.5-flash";
 export const generateArticle = async (req, res) => {
   try {
     const { userId } = req.auth();
-    const { prompt, length, improvePromptFlag } = req.body;
+    const { topic, length, improvePromptFlag } = req.body;
     const plan = req.plan;
     const free_usage = req.free_usage;
 
@@ -28,15 +28,21 @@ export const generateArticle = async (req, res) => {
       });
     }
 
-    const originalPrompt = prompt;
-    const finalPrompt = improvePromptFlag ? await improvePrompt(prompt) : prompt;
+    const originalTopic = topic;
+    const finalTopic = improvePromptFlag ? await improvePrompt(topic, "article") : topic;
+
+    const prompt = `Write a well-structured, detailed, and engaging article about the following topic. Use proper headings, subheadings, and paragraphs. Make it informative and easy to read.\n\nTopic: ${finalTopic}`;
 
     const response = await AI.chat.completions.create({
       model: GEMINI_MODEL,
       messages: [
         {
+          role: "system",
+          content: "You are a professional content writer. Write high-quality articles with proper structure, headings, and formatting in markdown.",
+        },
+        {
           role: "user",
-          content: finalPrompt,
+          content: prompt,
         },
       ],
       temperature: 0.7,
@@ -45,7 +51,7 @@ export const generateArticle = async (req, res) => {
 
     const content = response.choices[0].message.content;
 
-    await sql` INSERT INTO creations (user_id, prompt, content, type, original_prompt) VALUES (${userId}, ${finalPrompt}, ${content}, 'article', ${originalPrompt})`;
+    await sql` INSERT INTO creations (user_id, prompt, content, type, original_prompt) VALUES (${userId}, ${finalTopic}, ${content}, 'article', ${originalTopic})`;
     if (plan !== "premium") {
       await clerkClient.users.updateUserMetadata(userId, {
         privateMetadata: {
@@ -64,7 +70,7 @@ export const generateArticle = async (req, res) => {
 export const generateBlogTitle = async (req, res) => {
   try {
     const { userId } = req.auth();
-    const { prompt, improvePromptFlag } = req.body;
+    const { keyword, category, improvePromptFlag } = req.body;
     const plan = req.plan;
     const free_usage = req.free_usage;
 
@@ -75,24 +81,30 @@ export const generateBlogTitle = async (req, res) => {
       });
     }
 
-    const originalPrompt = prompt;
-    const finalPrompt = improvePromptFlag ? await improvePrompt(prompt) : prompt;
+    const originalKeyword = keyword;
+    const finalKeyword = improvePromptFlag ? await improvePrompt(keyword, "blog-title") : keyword;
+
+    const prompt = `Generate 5 creative, catchy, and SEO-friendly blog title ideas for the following keyword in the "${category || "General"}" category. Return them as a numbered list.\n\nKeyword: ${finalKeyword}`;
 
     const response = await AI.chat.completions.create({
       model: GEMINI_MODEL,
       messages: [
         {
+          role: "system",
+          content: "You are a professional blog title generator. Generate creative, SEO-optimized blog titles. Only return the titles as a numbered list, nothing else.",
+        },
+        {
           role: "user",
-          content: finalPrompt,
+          content: prompt,
         },
       ],
       temperature: 0.7,
-      max_tokens: 100,
+      max_tokens: 200,
     });
 
     const content = response.choices[0].message.content;
 
-    await sql` INSERT INTO creations (user_id, prompt, content, type, original_prompt) VALUES (${userId}, ${finalPrompt}, ${content}, 'blog-title', ${originalPrompt})`;
+    await sql` INSERT INTO creations (user_id, prompt, content, type, original_prompt) VALUES (${userId}, ${finalKeyword}, ${content}, 'blog-title', ${originalKeyword})`;
     if (plan !== "premium") {
       await clerkClient.users.updateUserMetadata(userId, {
         privateMetadata: {
@@ -111,7 +123,7 @@ export const generateBlogTitle = async (req, res) => {
 export const generateImage = async (req, res) => {
   try {
     const { userId } = req.auth();
-    const { prompt, publish, improvePromptFlag } = req.body;
+    const { description, style, publish, improvePromptFlag } = req.body;
     const plan = req.plan;
 
     if (plan !== "premium") {
@@ -121,13 +133,15 @@ export const generateImage = async (req, res) => {
       });
     }
 
-    const originalPrompt = prompt;
-    const finalPrompt = improvePromptFlag ? await improvePrompt(prompt) : prompt;
+    const originalDescription = description;
+    const finalDescription = improvePromptFlag ? await improvePrompt(description, "image") : description;
+
+    const imagePrompt = `${finalDescription}, ${style || "Realistic"} style`;
 
     // Call HuggingFace FLUX.1 API
     const { data } = await axios.post(
       "https://router.huggingface.co/hf-inference/models/black-forest-labs/FLUX.1-schnell",
-      { inputs: finalPrompt },
+      { inputs: imagePrompt },
       {
         headers: { 
           Authorization: `Bearer ${process.env.HUGGINGFACE_API_KEY}`,
@@ -144,9 +158,9 @@ export const generateImage = async (req, res) => {
       folder: "promptly_ai"
     });
 
-    await sql` INSERT INTO creations (user_id, prompt, content, type, publish, original_prompt) VALUES (${userId}, ${finalPrompt}, ${secure_url}, 'image', ${
+    await sql` INSERT INTO creations (user_id, prompt, content, type, publish, original_prompt) VALUES (${userId}, ${finalDescription}, ${secure_url}, 'image', ${
       publish ?? false
-    }, ${originalPrompt})`;
+    }, ${originalDescription})`;
 
     res.json({ success: true, content: secure_url });
   } catch (error) {
@@ -248,11 +262,15 @@ export const resumeReview = async (req, res) => {
 
       const pdfData = await pdf(dataBuffer)
 
-      const prompt = `Review the following resume and provide constructive feedback on its strengths, weaknesses, and ares for improvement. Resume Content: \n\n${pdfData.text}`
+      const prompt = `Review the following resume and provide constructive feedback on its strengths, weaknesses, and areas for improvement. Resume Content: \n\n${pdfData.text}`
 
       const response = await AI.chat.completions.create({
         model: GEMINI_MODEL,
         messages: [
+          {
+            role: "system",
+            content: "You are a professional resume reviewer and career coach. Provide detailed, constructive feedback on resumes with specific actionable suggestions for improvement. Format your response in clear sections using markdown.",
+          },
           {
             role: "user",
             content: prompt,
@@ -310,11 +328,27 @@ export const regenerateCreation = async (req, res) => {
     let content;
 
     if (original.type === 'article' || original.type === 'blog-title' || original.type === 'resume-review') {
+      // Build proper system-context prompts based on creation type
+      let systemMsg, userMsg;
+      if (original.type === 'article') {
+        systemMsg = "You are a professional content writer. Write high-quality articles with proper structure, headings, and formatting in markdown.";
+        userMsg = `Write a well-structured, detailed, and engaging article about the following topic. Use proper headings, subheadings, and paragraphs.\n\nTopic: ${originalPrompt}`;
+      } else if (original.type === 'blog-title') {
+        systemMsg = "You are a professional blog title generator. Generate creative, SEO-optimized blog titles. Only return the titles as a numbered list, nothing else.";
+        userMsg = `Generate 5 creative, catchy, and SEO-friendly blog title ideas for the following keyword. Return them as a numbered list.\n\nKeyword: ${originalPrompt}`;
+      } else {
+        systemMsg = "You are a professional resume reviewer. Provide detailed, constructive feedback with actionable suggestions in markdown.";
+        userMsg = originalPrompt;
+      }
+
       const response = await AI.chat.completions.create({
         model: GEMINI_MODEL,
-        messages: [{ role: "user", content: originalPrompt }],
+        messages: [
+          { role: "system", content: systemMsg },
+          { role: "user", content: userMsg },
+        ],
         temperature: 0.8, // Slightly higher for variation
-        max_tokens: original.type === 'article' ? 1200 : original.type === 'resume-review' ? 1000 : 100,
+        max_tokens: original.type === 'article' ? 1200 : original.type === 'resume-review' ? 1000 : 200,
       });
       content = response.choices[0].message.content;
     } else if (original.type === 'image') {
