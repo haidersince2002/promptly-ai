@@ -4,6 +4,7 @@ import { useState } from "react";
 import toast from "react-hot-toast";
 import Markdown from "react-markdown";
 import axios from "axios";
+import UsageCounter from "../components/UsageCounter";
 
 axios.defaults.baseURL = import.meta.env.VITE_BASE_URL;
 
@@ -57,9 +58,12 @@ const BlogTitles = () => {
         onSubmit={onSubmitHandler}
         className="w-full max-w-lg p-4 bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700"
       >
-        <div className="flex items-center gap-3">
-          <Sparkles className="w-6 text-[#8e37eb]" />
-          <h1 className="text-xl font-semibold">AI Title Generator</h1>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Sparkles className="w-6 text-[#8e37eb]" />
+            <h1 className="text-xl font-semibold">AI Title Generator</h1>
+          </div>
+          <UsageCounter feature="blog-title" accentColor="#8e37eb" />
         </div>
         <p className="mt-6 text-sm font-semibold">Keyword</p>
 

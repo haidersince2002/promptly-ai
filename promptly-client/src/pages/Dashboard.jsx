@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Gem, Sparkles, Zap } from 'lucide-react'
 import { useAuth } from '@clerk/clerk-react'
+import { useNavigate } from 'react-router-dom'
 import CreationItem from '../components/CreationItem'
 import axios from "axios";
 import toast from 'react-hot-toast'
@@ -28,6 +29,7 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true)
   const [plan, setPlan] = useState('free')
   const {getToken} = useAuth()
+  const navigate = useNavigate()
 
   const getDashboardData = async () => {
     try {
@@ -137,7 +139,7 @@ const Dashboard = () => {
 
         {/* Upgrade Card — only show for free users */}
         {plan !== 'premium' && (
-          <div className='flex justify-between items-center w-72 p-4 px-6 bg-gradient-to-r from-primary to-[#7c3aed] rounded-xl text-white cursor-pointer hover:scale-[1.02] transition' onClick={handleUpgrade}>
+          <div className='flex justify-between items-center w-72 p-4 px-6 bg-gradient-to-r from-primary to-[#7c3aed] rounded-xl text-white cursor-pointer hover:scale-[1.02] transition' onClick={() => navigate('/ai/upgrade')}>
             <div>
               <p className='text-sm opacity-90'>Unlock All Features</p>
               <h2 className='text-xl font-semibold'>Upgrade to Premium</h2>

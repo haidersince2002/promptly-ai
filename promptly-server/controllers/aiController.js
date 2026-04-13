@@ -1,6 +1,7 @@
 import OpenAI from "openai";
 import sql from "../config/db.js";
 import { clerkClient } from "@clerk/express";
+import { checkFreeLimit, incrementFreeUsage } from "../middleware/auth.js";
 import axios from "axios";
 import { v2 as cloudinary } from "cloudinary";
 import fs from 'fs'
@@ -27,12 +28,8 @@ export const generateArticle = async (req, res) => {
   try {
     const { userId } = req.auth();
     const { topic, length, improvePromptFlag } = req.body;
-    const plan = req.plan;
-    const free_usage = req.free_usage;
 
-    if (plan !== "premium" && free_usage >= 10) {
-      return res.json({ success: false, message: "Limit reached. Upgrade to continue." });
-    }
+    if (!(await checkFreeLimit(req, res, 'article'))) return;
 
     const spec = ARTICLE_LENGTH_MAP[length] || ARTICLE_LENGTH_MAP[800];
 
@@ -63,11 +60,7 @@ Formatting rules:
     const content = response.choices[0].message.content;
 
     await sql` INSERT INTO creations (user_id, prompt, content, type, original_prompt) VALUES (${userId}, ${topic}, ${content}, 'article', ${topic})`;
-    if (plan !== "premium") {
-      await clerkClient.users.updateUserMetadata(userId, {
-        privateMetadata: { free_usage: free_usage + 1 },
-      });
-    }
+    await incrementFreeUsage(req, 'article');
 
     res.json({ success: true, content });
   } catch (err) {
@@ -82,12 +75,8 @@ export const generateBlogTitle = async (req, res) => {
   try {
     const { userId } = req.auth();
     const { keyword, category, improvePromptFlag } = req.body;
-    const plan = req.plan;
-    const free_usage = req.free_usage;
 
-    if (plan !== "premium" && free_usage >= 10) {
-      return res.json({ success: false, message: "Limit reached. Upgrade to continue." });
-    }
+    if (!(await checkFreeLimit(req, res, 'blog-title'))) return;
 
     const finalKeyword = improvePromptFlag ? await improvePrompt(keyword, "blog-title") : keyword;
 
@@ -115,11 +104,7 @@ Rules:
     const content = response.choices[0].message.content;
 
     await sql` INSERT INTO creations (user_id, prompt, content, type, original_prompt) VALUES (${userId}, ${keyword}, ${content}, 'blog-title', ${keyword})`;
-    if (plan !== "premium") {
-      await clerkClient.users.updateUserMetadata(userId, {
-        privateMetadata: { free_usage: free_usage + 1 },
-      });
-    }
+    await incrementFreeUsage(req, 'blog-title');
 
     res.json({ success: true, content });
   } catch (err) {
@@ -134,11 +119,8 @@ export const generateImage = async (req, res) => {
   try {
     const { userId } = req.auth();
     const { description, style, publish, improvePromptFlag } = req.body;
-    const plan = req.plan;
 
-    if (plan !== "premium") {
-      return res.json({ success: false, message: "This feature is only available for premium subscriptions" });
-    }
+    if (!(await checkFreeLimit(req, res, 'image'))) return;
 
     const finalDescription = improvePromptFlag ? await improvePrompt(description, "image") : description;
 
@@ -166,6 +148,7 @@ export const generateImage = async (req, res) => {
     await sql` INSERT INTO creations (user_id, prompt, content, type, publish, original_prompt) VALUES (${userId}, ${description}, ${secure_url}, 'image', ${
       publish ?? false
     }, ${description})`;
+    await incrementFreeUsage(req, 'image');
 
     res.json({ success: true, content: secure_url });
   } catch (error) {
@@ -188,17 +171,15 @@ export const removeImageBackground = async (req, res) => {
   try {
     const { userId } = req.auth();
     const  image  = req.file;
-    const plan = req.plan;
 
-    if (plan !== "premium") {
-      return res.json({ success: false, message: "This feature is only available for premium subscriptions" });
-    }
+    if (!(await checkFreeLimit(req, res, 'remove-bg'))) return;
 
     const { secure_url } = await cloudinary.uploader.upload(image.path, {
       transformation: [{ effect: "background_removal", backgroud_removal: "remove_the_background" }],
     });
 
     await sql` INSERT INTO creations (user_id, prompt, content, type, original_prompt) VALUES (${userId}, 'Remove background from image', ${secure_url}, 'image', 'Remove background from image')`;
+    await incrementFreeUsage(req, 'remove-bg');
 
     res.json({ success: true, content: secure_url });
   } catch (err) {
@@ -214,11 +195,8 @@ export const removeImageObject = async (req, res) => {
     const { userId } = req.auth();
     const { object } = req.body;
     const  image  = req.file;
-    const plan = req.plan;
 
-    if (plan !== "premium") {
-      return res.json({ success: false, message: "This feature is only available for premium subscriptions" });
-    }
+    if (!(await checkFreeLimit(req, res, 'remove-object'))) return;
 
     const { public_id } = await cloudinary.uploader.upload(image.path);
 
@@ -229,6 +207,7 @@ export const removeImageObject = async (req, res) => {
 
     const promptText = `Removed ${object} from image`;
     await sql` INSERT INTO creations (user_id, prompt, content, type, original_prompt) VALUES (${userId}, ${promptText}, ${imageUrl}, 'image', ${promptText})`;
+    await incrementFreeUsage(req, 'remove-object');
 
     res.json({ success: true, content: imageUrl });
   } catch (err) {
@@ -316,21 +295,20 @@ export const regenerateCreation = async (req, res) => {
   try {
     const { userId } = req.auth();
     const { creationId } = req.body;
-    const plan = req.plan;
-    const free_usage = req.free_usage;
 
     const [original] = await sql`SELECT * FROM creations WHERE id = ${creationId} AND user_id = ${userId}`;
     if (!original) {
       return res.json({ success: false, message: "Creation not found" });
     }
 
-    if (plan !== "premium" && (original.type === 'article' || original.type === 'blog-title') && free_usage >= 10) {
-      return res.json({ success: false, message: "Limit reached. Upgrade to continue." });
-    }
-
-    if (plan !== "premium" && (original.type === 'image' || original.type === 'resume-review')) {
+    // Resume review is always premium-only
+    if (req.plan !== "premium" && original.type === 'resume-review') {
       return res.json({ success: false, message: "This feature is only available for premium subscriptions" });
     }
+
+    // Check per-feature daily limit for free users
+    const featureKey = original.type; // 'article', 'blog-title', or 'image'
+    if (!(await checkFreeLimit(req, res, featureKey))) return;
 
     const rootId = original.parent_id || original.id;
     const [maxVersionRow] = await sql`SELECT COALESCE(MAX(version), 0) as max_version FROM creations WHERE (id = ${rootId} OR parent_id = ${rootId}) AND user_id = ${userId}`;
@@ -406,11 +384,7 @@ Rules:
     await sql`INSERT INTO creations (user_id, prompt, content, type, original_prompt, version, parent_id, publish) 
               VALUES (${userId}, ${originalPrompt}, ${content}, ${original.type}, ${originalPrompt}, ${newVersion}, ${rootId}, false)`;
 
-    if (plan !== "premium" && (original.type === 'article' || original.type === 'blog-title')) {
-      await clerkClient.users.updateUserMetadata(userId, {
-        privateMetadata: { free_usage: free_usage + 1 },
-      });
-    }
+    await incrementFreeUsage(req, featureKey);
 
     res.json({ success: true, content, version: newVersion });
   } catch (err) {

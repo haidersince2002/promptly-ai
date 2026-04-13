@@ -1,5 +1,25 @@
 import sql from "../config/db.js";
 import { clerkClient } from "@clerk/express";
+import { FREE_LIMITS } from "../middleware/auth.js";
+
+// ─── Get free usage remaining counts ─────────────────────────────────────
+export const getFreeUsage = async (req, res) => {
+  try {
+    if (req.plan === "premium") {
+      return res.json({ success: true, plan: "premium", usage: null });
+    }
+
+    const remaining = {};
+    for (const [feature, limit] of Object.entries(FREE_LIMITS)) {
+      const used = req.freeUsage?.[feature]?.count || 0;
+      remaining[feature] = { used, limit, left: Math.max(0, limit - used) };
+    }
+
+    res.json({ success: true, plan: "free", usage: remaining });
+  } catch (error) {
+    res.json({ success: false, message: error.message });
+  }
+};
 
 export const getUserPlan = async (req, res) => {
   try {

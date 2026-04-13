@@ -3,6 +3,7 @@ import { useState } from "react";
 import axios from "axios";
 import toast from "react-hot-toast";
 import { useAuth } from "@clerk/clerk-react";
+import UsageCounter from "../components/UsageCounter";
 
 axios.defaults.baseURL = import.meta.env.VITE_BASE_URL;
 
@@ -53,9 +54,12 @@ const RemoveObject = () => {
         onSubmit={onSubmitHandler}
         className="w-full max-w-lg p-4 bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700"
       >
-        <div className="flex items-center gap-3">
-          <Sparkles className="w-6 text-[#4a7aff]" />
-          <h1 className="text-xl font-semibold">Object Removal</h1>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Sparkles className="w-6 text-[#4a7aff]" />
+            <h1 className="text-xl font-semibold">Object Removal</h1>
+          </div>
+          <UsageCounter feature="remove-object" accentColor="#4a7aff" />
         </div>
         <p className="mt-6 text-sm font-semibold">Upload Image</p>
 

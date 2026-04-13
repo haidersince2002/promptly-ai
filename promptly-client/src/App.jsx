@@ -11,6 +11,7 @@ import ReviewResume from "./pages/ReviewResume";
 import Community from "./pages/Community";
 import Templates from "./pages/Templates";
 import Pricing from "./pages/Pricing";
+import Upgrade from "./pages/Upgrade";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
 import Privacy from "./pages/Privacy";
@@ -38,6 +39,7 @@ const App = () => {
           <Route path="review-resume" element={<ReviewResume />} />
           <Route path="templates" element={<Templates />} />
           <Route path="community" element={<Community />} />
+          <Route path="upgrade" element={<Upgrade />} />
         </Route>
       </Routes>
     </div>
