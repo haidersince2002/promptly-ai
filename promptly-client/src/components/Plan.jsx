@@ -19,7 +19,7 @@ const plans = [
       "Image generation",
       "Background/object removal",
       "Resume review",
-      "Prompt improvement",
+      "PDF export",
       "All templates",
     ],
     cta: "View Pricing",

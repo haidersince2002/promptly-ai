@@ -25,7 +25,7 @@ const Terms = () => {
               <li>Background removal using Cloudinary AI</li>
               <li>Object removal using Cloudinary AI</li>
               <li>Resume review and analysis</li>
-              <li>Prompt templates and prompt improvement</li>
+              <li>Prompt templates</li>
               <li>Community gallery for sharing AI creations</li>
             </ul>
           </section>
@@ -39,7 +39,7 @@ const Terms = () => {
             <h2 className="text-lg font-semibold text-slate-700 dark:text-slate-200 mb-3">4. Free & Premium Plans</h2>
             <ul className="list-disc ml-6 space-y-1">
               <li><strong className="dark:text-slate-300">Free Plan:</strong> 10 AI generations (articles + titles), basic dashboard, community gallery access, and limited prompt templates.</li>
-              <li><strong className="dark:text-slate-300">Premium Plan (₹399/month):</strong> Unlimited generations, image generation, background/object removal, resume review, all templates, prompt improvement, and PDF export.</li>
+              <li><strong className="dark:text-slate-300">Premium Plan (₹399/month):</strong> Unlimited generations, image generation, background/object removal, resume review, all templates, and PDF export.</li>
             </ul>
           </section>
 

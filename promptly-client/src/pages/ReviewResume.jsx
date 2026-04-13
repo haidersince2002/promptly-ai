@@ -1,4 +1,4 @@
-import { FileText, Sparkles } from 'lucide-react';
+import { Copy, FileText, Sparkles } from 'lucide-react';
 import { useState } from 'react'
 import axios from "axios";
 import toast from "react-hot-toast";
@@ -35,7 +35,7 @@ const ReviewResume = () => {
         toast.error(data.message);
       }
       } catch (error) {
-        toast.error(error.message);
+        toast.error(error.response?.data?.message || error.message);
       }
       setLoading(false)
     };
@@ -73,20 +73,32 @@ const ReviewResume = () => {
         </button>
       </form>
       {/* right col */}
-      <div className="w-full max-w-lg p-4 bg-white dark:bg-slate-800 rounded-lg flex flex-col border border-gray-200 dark:border-slate-700 min-h-96 max-h-[600px]">
-        <div className="flex items-center gap-3">
-          <FileText className="w-5 h-5 text-[#00da83]" />
-          <h1 className="text-xl font-semibold">Analysis Results</h1>
+      <div className="w-full max-w-lg p-4 bg-white dark:bg-slate-800 rounded-lg flex flex-col border border-gray-200 dark:border-slate-700 min-h-96 max-h-[65vh]">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <FileText className="w-5 h-5 text-[#00da83]" />
+            <h1 className="text-xl font-semibold">Analysis Results</h1>
+          </div>
+          {content && (
+            <button onClick={() => { navigator.clipboard.writeText(content); toast.success('Copied to clipboard!'); }} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 transition cursor-pointer" title="Copy to clipboard">
+              <Copy size={16} className="text-gray-500 dark:text-gray-400" />
+            </button>
+          )}
         </div>
         {
-          !content ? (<div className="flex-1 flex justify-center items-center">
-            <div className="text-sm flex flex-col items-center gap-5 text-gray-400">
-              <FileText className="w-9 h-9" />
-              <p>Upload a resume and click "Review Resume" to get started </p>
+          loading ? (
+            <div className="flex-1 flex flex-col justify-center items-center gap-3">
+              <span className="w-8 h-8 rounded-full border-3 border-emerald-500 border-t-transparent animate-spin"></span>
+              <p className="text-sm text-gray-400">Analyzing your resume...</p>
+            </div>
+          ) : !content ? (<div className="flex-1 flex justify-center items-center">
+            <div className="text-sm flex flex-col items-center gap-3 text-gray-400">
+              <Sparkles size={32} className="opacity-40" />
+              <p>Your generated content will appear here</p>
             </div>
           </div>) : (
-            <div className='mt-3 h-full overflow-y-scroll text-sm text-slate-600 dark:text-slate-300'>
-              <div className='reset-tw'>
+            <div className='mt-3 flex-1 overflow-y-auto text-sm text-slate-600 dark:text-slate-300'>
+              <div className='prose-custom'>
                 <Markdown >
                   {content}
                 </Markdown>

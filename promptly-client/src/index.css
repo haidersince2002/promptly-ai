@@ -33,6 +33,14 @@
   z-index: 10;
 }
 
+/* Kill Clerk dev-mode footer gradient in both modes */
+.cl-footer,
+.cl-footerAction,
+.cl-footerPages {
+  background: transparent !important;
+  background-image: none !important;
+}
+
 /* Dark mode for Clerk components — force all sections dark */
 .dark .cl-card,
 .dark .cl-card>*,
@@ -40,7 +48,7 @@
 .dark .cl-card footer,
 .dark .cl-card section,
 .dark .cl-card nav {
-  background-color: #1e293b !important;
+  background-color: #0f1117 !important;
   color: #e2e8f0 !important;
 }
 
@@ -49,7 +57,7 @@
 }
 
 .dark .cl-card input {
-  background-color: #0f172a !important;
+  background-color: #1a1d2e !important;
   border-color: #334155 !important;
   color: #e2e8f0 !important;
 }
@@ -65,3 +73,21 @@
 .dark .cl-modalBackdrop {
   background-color: rgba(0, 0, 0, 0.7) !important;
 }
+
+/* Prose-custom: Manual prose styles for react-markdown output */
+.prose-custom h1 { font-size: 1.75rem; font-weight: 700; margin: 1.25rem 0 0.75rem; line-height: 1.3; }
+.prose-custom h2 { font-size: 1.35rem; font-weight: 700; margin: 1.1rem 0 0.6rem; line-height: 1.35; }
+.prose-custom h3 { font-size: 1.15rem; font-weight: 600; margin: 1rem 0 0.5rem; line-height: 1.4; }
+.prose-custom p { margin: 0.5rem 0; line-height: 1.7; }
+.prose-custom ul, .prose-custom ol { padding-left: 1.5rem; margin: 0.5rem 0; }
+.prose-custom ul { list-style-type: disc; }
+.prose-custom ol { list-style-type: decimal; }
+.prose-custom li { margin: 0.25rem 0; line-height: 1.6; }
+.prose-custom strong { font-weight: 700; }
+.prose-custom em { font-style: italic; }
+.prose-custom blockquote { border-left: 3px solid #7c3aed; padding-left: 1rem; margin: 0.75rem 0; opacity: 0.9; }
+.prose-custom code { background-color: rgba(124, 58, 237, 0.15); padding: 0.15rem 0.4rem; border-radius: 0.25rem; font-size: 0.85em; }
+.prose-custom pre { background-color: #1e293b; padding: 1rem; border-radius: 0.5rem; overflow-x: auto; margin: 0.75rem 0; }
+.prose-custom pre code { background: none; padding: 0; }
+.prose-custom a { color: #818cf8; text-decoration: underline; }
+.prose-custom hr { border-color: #334155; margin: 1rem 0; }

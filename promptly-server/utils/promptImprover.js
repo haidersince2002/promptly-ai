@@ -9,15 +9,19 @@ const AI = new OpenAI({
  * Improve a user's raw input using Gemini to produce better AI output.
  * Only the user's topic/description is improved — task instructions are added separately.
  * @param {string} userInput - The raw user input (topic, keyword, description)
- * @param {string} taskType - The type of task (e.g., "blog-title", "article", "image")
+ * @param {string} taskType - The type of task: "blog-title", "article", or "image"
  * @returns {string} - The improved user input
  */
 export async function improvePrompt(userInput, taskType = "general") {
   const taskHints = {
-    "blog-title": "The user wants to generate blog titles. Improve their keyword/topic to produce more creative and SEO-friendly blog titles.",
-    "article": "The user wants to write an article. Improve their topic description to produce a more focused, detailed, and engaging article.",
-    "image": "The user wants to generate an image. Improve their description to be more vivid, detailed, and visually descriptive for image generation.",
-    "general": "Improve the following input to be more specific, detailed, and effective.",
+    "blog-title":
+      "The user wants to generate blog titles. Improve their keyword/topic to produce more creative and SEO-friendly blog titles.",
+    article:
+      "The user wants to write an article. Improve their topic description to produce a more focused, detailed, and engaging article.",
+    image:
+      "The user wants to generate an image. Improve their description to be more vivid, detailed, and visually descriptive for image generation.",
+    general:
+      "Improve the following input to be more specific, detailed, and effective.",
   };
 
   const hint = taskHints[taskType] || taskHints["general"];
@@ -37,7 +41,10 @@ export async function improvePrompt(userInput, taskType = "general") {
 
     return response.choices[0].message.content.trim();
   } catch (error) {
-    console.log("[Prompt Improver] Error, using original input:", error.message);
+    console.log(
+      "[Prompt Improver] Error, using original input:",
+      error.message
+    );
     return userInput; // Fallback to original on error
   }
 }

@@ -39,7 +39,7 @@ const About = () => {
       icon: Lightbulb,
       title: "Continuous Innovation",
       description:
-        "From prompt improvement to template systems, we're constantly building features that make AI accessible to everyone.",
+        "From smart templates to AI-powered content tools, we're constantly building features that make AI accessible to everyone.",
     },
     {
       icon: Rocket,

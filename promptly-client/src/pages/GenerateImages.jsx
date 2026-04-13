@@ -25,6 +25,7 @@ const GenerateImages = () => {
   const [publish, setPublish] = useState(false);
   const [improvePromptFlag, setImprovePromptFlag] = useState(false);
 
+
   const [loading, setLoading] = useState(false);
   const [content, setContent] = useState("");
 
@@ -48,7 +49,7 @@ const GenerateImages = () => {
         toast.error(data.message);
       }
     } catch (error) {
-      toast.error(error.message);
+      toast.error(error.response?.data?.message || error.message);
     }
     setLoading(false)
   };
@@ -122,20 +123,25 @@ const GenerateImages = () => {
         </button>
       </form>
       {/* right col */}
-      <div className="w-full max-w-lg p-4 bg-white dark:bg-slate-800 rounded-lg flex flex-col border border-gray-200 dark:border-slate-700 min-h-96">
+      <div className="w-full max-w-lg p-4 bg-white dark:bg-slate-800 rounded-lg flex flex-col border border-gray-200 dark:border-slate-700 min-h-96 max-h-[65vh]">
         <div className="flex items-center gap-3">
           <Image className="w-5 h-5 text-[#8e37eb]" />
           <h1 className="text-xl font-semibold">Generated image</h1>
         </div>
         {
-          !content ? (<div className="flex-1 flex justify-center items-center">
-            <div className="text-sm flex flex-col items-center gap-5 text-gray-400">
-              <Image className="w-9 h-9" />
-              <p>Enter a topic click "Generate image" to get started</p>
+          loading ? (
+            <div className="flex-1 flex flex-col justify-center items-center gap-3">
+              <span className="w-8 h-8 rounded-full border-3 border-green-500 border-t-transparent animate-spin"></span>
+              <p className="text-sm text-gray-400">Generating your image...</p>
+            </div>
+          ) : !content ? (<div className="flex-1 flex justify-center items-center">
+            <div className="text-sm flex flex-col items-center gap-3 text-gray-400">
+              <Sparkles size={32} className="opacity-40" />
+              <p>Your generated content will appear here</p>
             </div>
           </div>): (
-            <div className="mt-3 h-full">
-              <img src={content} alt=""  className="w-full h-full rounded-lg"/>
+            <div className="mt-3 flex-1 overflow-y-auto">
+              <img src={content} alt=""  className="w-full rounded-lg"/>
             </div>
           )
         }
