@@ -32,6 +32,21 @@ const GenerateImages = () => {
 
   const { getToken } = useAuth();
 
+  const showRateLimitToast = (message) => {
+    let seconds = 60;
+    const toastId = toast(`${message} (${seconds}s)`, { duration: Infinity, icon: '⏳' });
+    const interval = setInterval(() => {
+      seconds -= 1;
+      if (seconds <= 0) {
+        clearInterval(interval);
+        toast.dismiss(toastId);
+        toast.success('You can try again now!', { duration: 3000 });
+      } else {
+        toast(`${message} (${seconds}s)`, { id: toastId, duration: Infinity, icon: '⏳' });
+      }
+    }, 1000);
+  };
+
   const onSubmitHandler = async (e) => {
     e.preventDefault();
     try {
@@ -46,11 +61,18 @@ const GenerateImages = () => {
       );
       if (data.success) {
         setContent(data.content);
+      } else if (data.isRateLimit) {
+        showRateLimitToast(data.message);
       } else {
         toast.error(data.message);
       }
     } catch (error) {
-      toast.error(error.response?.data?.message || error.message);
+      const errData = error.response?.data;
+      if (errData?.isRateLimit) {
+        showRateLimitToast(errData.message);
+      } else {
+        toast.error(errData?.message || error.message);
+      }
     }
     setLoading(false)
   };

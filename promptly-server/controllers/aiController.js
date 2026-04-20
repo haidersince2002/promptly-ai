@@ -15,6 +15,44 @@ const AI = new OpenAI({
 
 const GEMINI_MODEL = "gemini-2.5-flash";
 
+// ─── Small delay helper ───────────────────────────────────────────────────
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+// ─── Parse Gemini / OpenAI-compat errors into friendly messages ───────────
+function parseGeminiError(err) {
+  // OpenAI SDK wraps the response in err.status and err.error
+  const status = err?.status ?? err?.response?.status;
+  const geminiMsg =
+    err?.error?.message ||
+    err?.response?.data?.error?.message ||
+    err?.message ||
+    '';
+
+  if (status === 429 || geminiMsg.toLowerCase().includes('quota') || geminiMsg.toLowerCase().includes('rate')) {
+    return {
+      userMessage: '⏳ API rate limit reached. Please wait 30–60 seconds and try again.',
+      isRateLimit: true,
+    };
+  }
+  if (status === 401 || status === 403 || geminiMsg.toLowerCase().includes('api key')) {
+    return {
+      userMessage: '🔑 API key error. Please contact support.',
+      isRateLimit: false,
+    };
+  }
+  if (status === 503 || geminiMsg.toLowerCase().includes('overloaded') || geminiMsg.toLowerCase().includes('unavailable')) {
+    return {
+      userMessage: '🔄 Gemini is temporarily overloaded. Please try again in a moment.',
+      isRateLimit: false,
+    };
+  }
+  // Fallback — surface the raw Gemini message if available
+  return {
+    userMessage: geminiMsg || 'Generation failed. Please try again.',
+    isRateLimit: false,
+  };
+}
+
 // ─── Map client length value to prompt spec ──────────────────────────────
 const ARTICLE_LENGTH_MAP = {
   800:  { maxTokens: 1500, instruction: 'Short: write between 500 and 800 words. Do not stop before 500 words.' },
@@ -33,7 +71,12 @@ export const generateArticle = async (req, res) => {
 
     const spec = ARTICLE_LENGTH_MAP[length] || ARTICLE_LENGTH_MAP[800];
 
-    const finalTopic = improvePromptFlag ? await improvePrompt(topic, "article") : topic;
+    let finalTopic = topic;
+    if (improvePromptFlag) {
+      finalTopic = await improvePrompt(topic, "article");
+      // Small pause so back-to-back calls don't hit the RPM cap
+      await sleep(600);
+    }
 
     const prompt = `Write a complete, well-structured article on the topic: '${finalTopic}'.
 
@@ -64,8 +107,9 @@ Formatting rules:
 
     res.json({ success: true, content });
   } catch (err) {
-    console.error('[WriteArticle] Full error:', JSON.stringify(err?.response?.data || err?.message || err));
-    res.status(500).json({ success: false, message: err?.response?.data?.error?.message || 'Generation failed. Please try again.' });
+    const { userMessage, isRateLimit } = parseGeminiError(err);
+    console.error('[WriteArticle] Error:', err?.status ?? err?.response?.status, userMessage);
+    res.status(isRateLimit ? 429 : 500).json({ success: false, message: userMessage, isRateLimit });
   }
 };
 
@@ -78,7 +122,11 @@ export const generateBlogTitle = async (req, res) => {
 
     if (!(await checkFreeLimit(req, res, 'blog-title'))) return;
 
-    const finalKeyword = improvePromptFlag ? await improvePrompt(keyword, "blog-title") : keyword;
+    let finalKeyword = keyword;
+    if (improvePromptFlag) {
+      finalKeyword = await improvePrompt(keyword, "blog-title");
+      await sleep(600);
+    }
 
     const prompt = `Generate exactly 8 creative, SEO-optimized blog post titles.
 Keyword: '${finalKeyword}'
@@ -108,8 +156,9 @@ Rules:
 
     res.json({ success: true, content });
   } catch (err) {
-    console.error('[BlogTitles] Full error:', JSON.stringify(err?.response?.data || err?.message || err));
-    res.status(500).json({ success: false, message: err?.response?.data?.error?.message || 'Generation failed. Please try again.' });
+    const { userMessage, isRateLimit } = parseGeminiError(err);
+    console.error('[BlogTitles] Error:', err?.status ?? err?.response?.status, userMessage);
+    res.status(isRateLimit ? 429 : 500).json({ success: false, message: userMessage, isRateLimit });
   }
 };
 
@@ -284,8 +333,9 @@ Be specific, honest, and actionable. Do not give generic advice.`
   
       res.json({ success: true, content });
     } catch (err) {
-      console.error('[ResumeReview] Full error:', JSON.stringify(err?.response?.data || err?.message || err));
-      res.status(500).json({ success: false, message: err?.response?.data?.error?.message || 'Generation failed. Please try again.' });
+      const { userMessage, isRateLimit } = parseGeminiError(err);
+      console.error('[ResumeReview] Error:', err?.status ?? err?.response?.status, userMessage);
+      res.status(isRateLimit ? 429 : 500).json({ success: false, message: userMessage, isRateLimit });
     }
   };
 
@@ -388,7 +438,8 @@ Rules:
 
     res.json({ success: true, content, version: newVersion });
   } catch (err) {
-    console.error('[Regenerate] Full error:', JSON.stringify(err?.response?.data || err?.message || err));
-    res.status(500).json({ success: false, message: err?.response?.data?.error?.message || 'Generation failed. Please try again.' });
+    const { userMessage, isRateLimit } = parseGeminiError(err);
+    console.error('[Regenerate] Error:', err?.status ?? err?.response?.status, userMessage);
+    res.status(isRateLimit ? 429 : 500).json({ success: false, message: userMessage, isRateLimit });
   }
 };
